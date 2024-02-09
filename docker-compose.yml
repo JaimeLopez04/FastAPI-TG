@@ -1,24 +1,10 @@
-version: "3.8"
+version: '3.8'
 
 services:
-
-  postgres:
-    image: postgres
-    restart: always
-    ports:
-      - "5435:5432"
+  feelings_app:
+    image: mysql
     environment:
-      - DATABASE_HOST=127.0.0.1
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=root
-
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "lopezjaime433@gmail.com"
-      PGADMIN_DEFAULT_PASSWORD: "admin"
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=feelings_app
     ports:
-      - "90:80"
-    depends_on:
-      - postgres
+      - 3405:3306

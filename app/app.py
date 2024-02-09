@@ -1,9 +1,6 @@
 from fastapi import FastAPI
+from .routes.user import user
 
 app = FastAPI()
 
-#app.include_router(user) TO USE ROUTES
-
-@app.get('/')
-def get_method():
-    return 'Funtion get'
+app.include_router(user)
