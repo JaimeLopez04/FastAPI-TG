@@ -1,10 +1,10 @@
-# from fastapi import APIRouter
-# from ..config.db import conn
-# from models.user import users
-
-# user = APIRouter(prefix='/api')
+from fastapi import APIRouter
+from ..models.user import users
+from ..config.db import conn
 
 
-# @user.get('/get_users')
-# def guet_users():
-#     return  conn.execute(users.select().fetch_all())
+user = APIRouter(prefix='/api')
+
+@user.get('/users')
+def get_users():
+    return conn.execute(users.select()).fetchall()
