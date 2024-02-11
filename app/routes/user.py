@@ -1,12 +1,13 @@
 #Import FastAPI modules and Python Modules
-from fastapi import APIRouter, HTTPException
+from email import message
+from fastapi import APIRouter, HTTPException, Response
 from cryptography.fernet import Fernet
-from fastapi.responses import JSONResponse
+import json
 
 #Import local files
 from ..models.user import users
 from ..config.db import conn
-from ..schemas.user import User
+from ..schemas.user import User, AuthUser
 
 #Crypt Pass
 key = Fernet.generate_key()
@@ -25,17 +26,21 @@ def get_users():
         # Obtiene los nombres de las columnas de la tabla
         columns = result_proxy.keys()
 
-        # Convierte las filas en una lista de diccionarios
-        results = [dict(zip(columns, row)) for row in rows]
+        # Convierte las filas en una lista de diccionarios y les da formato JSON
+        results = json.dumps([dict(zip(columns, row)) for row in rows])
+        
+        if results == '[]' :
+            message = {
+                "message" : "No hay ningun usuario registrado actualmente"
+            }
+            return Response(content=json.dumps(message), media_type='application/json', status_code=200)
         
         # Devuelve los resultados en forma de JSON
-        return results
+        return Response(content=results, media_type='application/json', status_code=200)
     except Exception as e:
+        print (e)
         # En caso de error, registra el error y lanza una excepción HTTP
-        print("Error al obtener usuarios:", e)
         raise HTTPException(status_code=500, detail="Error al obtener usuarios")
-
-
 
 
 @user.post('/create_user')
@@ -48,14 +53,64 @@ def create_user(user: User):
             "email": user.email,
             "password": f.encrypt(user.password.encode('utf-8')).decode('utf-8')
         }
+        #Verifica si el correo ya existe
+        exits_user = conn.execute(users.select().where(users.c.email == new_user["email"])).first()
+
+        #Si existe retorna una excepción
+        if bool(exits_user):
+            return HTTPException(status_code=422, detail="El correo ingresado ya se encuentra registrado")
+        
         # Inserta los datos del nuevo usuario en la base de datos
-        res = conn.execute(users.insert().values(new_user))
+        conn.execute(users.insert().values(new_user))
         # Confirma los cambios en la base de datos
         conn.commit()
-        
+        message = json.dumps({
+            "message" : "¡Usuario registrado de manera exitosa!",
+            "status_code" : 200
+        })
         # Devuelve un mensaje de éxito junto con el ID del nuevo usuario
-        return {"message": "Usuario creado exitosamente"}
+        return Response(content=message, media_type='application/json', status_code=200)
     except Exception as e:
         # En caso de error, registra el error y lanza una excepción HTTP
-        print("Error al crear usuario:", e)
         raise HTTPException(status_code=500, detail="Error al crear usuario")
+    
+
+@user.post('/auth_user')
+def authenticate(user: AuthUser):
+    # Crea un diccionario con los datos del nuevo usuario
+    auth_user = {
+        "email": user.email,
+        "password": f.encrypt(user.password.encode('utf-8')).decode('utf-8')
+    }
+    
+    result = conn.execute(users.select().where(users.c.email == auth_user["email"])).first()
+    print(auth_user)
+    # Verificar si se encontró un usuario con ese correo electrónico
+    if result is not None:
+        password_from_db = result[4]  # Obtener la contraseña de la tupla
+        names = result[1]
+        last_names = result[2]
+    else:
+        message = json.dumps({
+            "message" : "Tu usuario no fue encontrado",
+            "status_code" : 422
+        })
+        return Response(content=message, media_type='application/json', status_code=422)
+    print(password_from_db)
+    print(f.decrypt(password_from_db).decode())
+    print(auth_user["password"])
+    
+    if password_from_db == auth_user["password"]:
+        message = json.dumps({
+            "message" : f'{names} {last_names}',
+            "status_code" : 200
+        })
+        return Response(content=message, media_type='application/json', status_code=200)
+    else:
+        message = json.dumps({
+            "message" : "Tu contraseña es incorrecta",
+            "status_code" : 422
+        })
+        return Response(content=message, media_type='application/json', status_code=422)
+    
+    

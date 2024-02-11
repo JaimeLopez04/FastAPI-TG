@@ -5,7 +5,7 @@ users = Table('users', meta,
             Column('id_user', Integer, primary_key=True, autoincrement=True),
             Column('user_names', String(255)),
             Column('user_last_names', String(255)),
-            Column('email', String(255)),
+            Column('email', String(255), unique=True),
             Column('password', String(255))
             )
 
