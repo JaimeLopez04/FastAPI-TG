@@ -1,7 +1,6 @@
 #Import FastAPI modules and Python Modules
 from email import message
 from fastapi import APIRouter, HTTPException, Response
-from cryptography.fernet import Fernet
 import json
 
 #Import local files
@@ -9,9 +8,6 @@ from ..models.user import users
 from ..config.db import conn
 from ..schemas.user import User, AuthUser
 
-#Crypt Pass
-key = Fernet.generate_key()
-f = Fernet(key)
 
 #Route with defaul prefix /api to make route that /api/users etc...
 user = APIRouter(prefix='/api')
@@ -51,7 +47,7 @@ def create_user(user: User):
             "user_names": user.user_names,
             "user_last_names": user.user_last_names,
             "email": user.email,
-            "password": f.encrypt(user.password.encode('utf-8')).decode('utf-8')
+            "password": user.password
         }
         #Verifica si el correo ya existe
         exits_user = conn.execute(users.select().where(users.c.email == new_user["email"])).first()
@@ -80,11 +76,11 @@ def authenticate(user: AuthUser):
     # Crea un diccionario con los datos del nuevo usuario
     auth_user = {
         "email": user.email,
-        "password": f.encrypt(user.password.encode('utf-8')).decode('utf-8')
+        "password": user.password
     }
     
     result = conn.execute(users.select().where(users.c.email == auth_user["email"])).first()
-    print(auth_user)
+
     # Verificar si se encontró un usuario con ese correo electrónico
     if result is not None:
         password_from_db = result[4]  # Obtener la contraseña de la tupla
@@ -96,9 +92,6 @@ def authenticate(user: AuthUser):
             "status_code" : 422
         })
         return Response(content=message, media_type='application/json', status_code=422)
-    print(password_from_db)
-    print(f.decrypt(password_from_db).decode())
-    print(auth_user["password"])
     
     if password_from_db == auth_user["password"]:
         message = json.dumps({
