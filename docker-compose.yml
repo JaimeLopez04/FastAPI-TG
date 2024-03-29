@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  feelings_app:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=feelings_app
+    ports:
+      - 3405:3306

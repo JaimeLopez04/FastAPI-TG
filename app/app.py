@@ -1,9 +1,23 @@
 from fastapi import FastAPI
+from .routes.user import user
+from .routes.recognizer import emotions_recognizer
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI()
 
-#app.include_router(user) TO USE ROUTES
+origins = [
+    'http://localhost:5173'
+]
 
-@app.get('/')
-def get_method():
-    return 'Funtion get'
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*']
+    
+)
+
+app.include_router(user)
+app.include_router(emotions_recognizer)

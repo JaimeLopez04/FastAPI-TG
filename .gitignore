@@ -8,6 +8,7 @@ htmlcov
 dist
 site
 .coverage
+.history
 coverage.xml
 .netlify
 test.db
@@ -16,6 +17,9 @@ Pipfile.lock
 env3.*
 .venv
 env
+.env
+.venv
+entorno
 docs_build
 site_build
 venv
