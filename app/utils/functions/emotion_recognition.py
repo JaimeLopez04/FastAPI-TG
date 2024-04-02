@@ -5,11 +5,11 @@ import numpy as np
 emotion_labels = {0: 'Angry', 1: 'Disgust', 2: 'Fear', 3: 'Happy', 4: 'Sad', 5: 'Surprise', 6: 'Neutral'}
 
 # Cargar el modelo de análisis de sentimientos
-emotion_model = load_model('utils/models/emotion_model.h5')
+emotion_model = load_model('app/utils/models/emotion_model.h5')
 
 def detect_faces_and_emotions(video_path):
     # Cargar el clasificador Haar Cascade para la detección de rostros
-    face_cascade = cv2.CascadeClassifier('utils/models/haarcascade_frontalface_default.xml')
+    face_cascade = cv2.CascadeClassifier('app/utils/models/haarcascade_frontalface_default.xml')
 
     # Iniciar la captura de video
     cap = cv2.VideoCapture(video_path)
