@@ -1,4 +1,3 @@
-from email import message
 from fastapi import File, Query, UploadFile, APIRouter, Response, Form
 from datetime import datetime, timedelta
 from sqlalchemy import and_
@@ -134,8 +133,8 @@ async def save_video(file, id_user, class_name, class_date):
     except Exception as e:
         print("Error al guardar el video:", e)
         return None
-    
-    
+
+
 @emotions_recognizer.get('/emotion_recognizer/get_resumen')
 def get_resumen(id_user: str = Query(...)):
     
