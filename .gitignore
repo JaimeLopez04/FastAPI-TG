@@ -23,9 +23,10 @@ entorno
 docs_build
 site_build
 venv
+contants
 docs.zip
 archive.zip
-
+*contants
 # vim temporary files
 *~
 .*.sw?
