@@ -13,7 +13,7 @@ emotions_recognizer = APIRouter(prefix='/api')
 
 
 @emotions_recognizer.post("/emotion_recognizer/analyze_video")
-async def analyze_video(file: UploadFile = File(...), id_user: str = Form(...), class_name: str = Form(...), class_date: str = Form(...)):
+async def analyze_video(file: UploadFile = File(...), id_user: int = Form(...), class_name: str = Form(...), class_date: str = Form(...)):
     videos_count = count_videos_in_directory('app/storage/videos')
     try:
         # Crear la ruta para guardar el video
@@ -136,7 +136,7 @@ async def save_video(file, id_user, class_name, class_date):
 
 
 @emotions_recognizer.get('/emotion_recognizer/get_resumen')
-def get_resumen(id_user: str = Query(...)):
+def get_resumen(id_user: int = Query(...)):
     
     # Obtener la fecha del primer día de la semana (lunes)
     today = datetime.now()

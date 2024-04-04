@@ -5,7 +5,7 @@ class ClassTaught(BaseModel):
     id_class: Optional[str]
     class_name: str
     class_date: str
-    id_user: str
+    id_user: int
     enojo: int
     disgusto: int
     miedo: int
