@@ -94,7 +94,8 @@ def authenticate(user: AuthUser):
     
     if password_from_db == auth_user["password"]:
         message = json.dumps({
-            "message" : f'{names} {last_names}',
+            "name" : f'{names} {last_names}',
+            "id_user" : result[0],
             "status_code" : 200
         })
         return Response(content=message, media_type='application/json', status_code=200)
