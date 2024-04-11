@@ -1,6 +1,7 @@
 from fastapi import File, Query, UploadFile, APIRouter, Response, Form
 from datetime import datetime, timedelta
 from sqlalchemy import and_
+from sqlalchemy.sql.expression import insert  # Importa el método insert
 import json
 import os
 
@@ -36,60 +37,57 @@ async def analyze_video(file: UploadFile = File(...), id_user: int = Form(...), 
 
         # Realizar el análisis de emociones en el video
         emotions_detected = detect_faces_and_emotions(video_path)
-        
-        if emotions_detected['dominan_emotion'] not in ['Felicidad', 'Sorpresa', 'Neutral']:
-            message = json.dumps({
+        if 'dominan_emotion' in emotions_detected and emotions_detected['dominan_emotion'] not in ['Felicidad', 'Sorpresa', 'Neutral']:
+            message = {
                 "emotions_detected": emotions_detected,
                 "status_code": 200,
                 "video_link": f"/download/{video_name}"  # Ruta para descargar el video
-            })
-            
+            }
             await save_class(id_user, video_path, class_name, class_date, emotions_detected)
-            
-            return Response(content=message, media_type="application/json", status_code=200)
-        else :
+            return Response(content=json.dumps(message), media_type="application/json", status_code=200)
+        else:
             os.remove(video_path)
-            message = json.dumps({
-                "message" : emotions_detected,
-                "status_code" : 200
-            })
-            
+            message = {
+                "message": emotions_detected,
+                "status_code": 200
+            }
             await save_class(id_user, 'Sin video', class_name, class_date, emotions_detected)
-            
-            return Response(content=message, media_type='application/json', status_code=200)
-            
+            return Response(content=json.dumps(message), media_type='application/json', status_code=200)
     except Exception as e:
-        message = json.dumps({
-            "error" : str(e),
-            "status_code" : 422
-        })
-        return Response(content=message, media_type="application/json", status_code=422)
+        message = {
+            "error": str(e),
+            "status_code": 422
+        }
+        return Response(content=json.dumps(message), media_type="application/json", status_code=422)
 
 
-async def save_class(id_user, filePath, class_name, class_date, emotions_detected):
-    new_class = {
-        "class_name" : class_name,
-        "class_date" : class_date,
-        "id_user" : id_user,
-        "enojo" : emotions_detected.enojo,
-        "disgusto" : emotions_detected.disgusto,
-        "miedo" : emotions_detected.miedo,
-        "felicidad" : emotions_detected.felicidad,
-        "tristeza" : emotions_detected.tristeza,
-        "sorpresa" : emotions_detected.sorpresa,
-        "neutral" : emotions_detected.neutral,
-        "faces_detected" : emotions_detected.faces_detected,
-        "dominant_emotion" : emotions_detected.dominant_emotion,
-        "file_path" : filePath
-    }
-    
-    # Insertar los datos de la clase en la base de datos
-    conn.execute(class_taught.insert().values(new_class))
-    # Guardar los cambios
-    conn.commit()
-    
-    return
+async def save_class(id_user, file_path, class_name, class_date, emotions_detected):
 
+    try:
+        new_class = {
+            "class_name": class_name,
+            "class_date": class_date,
+            "id_user": id_user,
+            "enojo": emotions_detected['emotions_detected'].get('Enojo', 0),
+            "disgusto": emotions_detected['emotions_detected'].get('Disgusto', 0),
+            "miedo": emotions_detected['emotions_detected'].get('Miedo', 0),
+            "felicidad": emotions_detected['emotions_detected'].get('Felicidad', 0),
+            "tristeza": emotions_detected['emotions_detected'].get('Tristeza', 0),
+            "sorpresa": emotions_detected['emotions_detected'].get('Sorpresa', 0),
+            "neutral": emotions_detected['emotions_detected'].get('Neutral', 0),
+            "faces_detected": emotions_detected.get('faces_detected', 0),
+            "dominant_emotion": emotions_detected.get('dominan_emotion', 'Desconocido'),
+            "file_path": file_path
+        }
+
+        
+        # Insertar los datos de la clase en la base de datos
+        conn.execute(insert(class_taught).values(new_class))
+        # Guardar los cambios
+        conn.commit()
+    except Exception as e:
+        print("Error al guardar en la base de datos:", str(e))
+        raise
 
 def count_videos_in_directory(directory):
     try:

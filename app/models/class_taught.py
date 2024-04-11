@@ -17,7 +17,7 @@ class_taught = Table('class_taught', meta,
                 Column('neutral', Integer),
                 Column('faces_detected', Integer),
                 Column('dominant_emotion', String(255)),
-                Column('file_path', String(255), unique=True)
+                Column('file_path', String(255))
                 )
 
 meta.create_all(engine)

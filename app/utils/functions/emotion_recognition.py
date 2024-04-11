@@ -7,7 +7,6 @@ emotion_labels = {0: 'Enojo', 1: 'Disgusto', 2: 'Miedo',
 
 
 def detect_faces_and_emotions(video_path):
-    print('Si llama al backend')
     try:
         emotion_model = load_model('app/utils/models/emotion_model.h5')
     except OSError as e:

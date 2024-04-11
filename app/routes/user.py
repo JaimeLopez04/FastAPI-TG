@@ -66,6 +66,7 @@ def create_user(user: User):
         # Devuelve un mensaje de éxito junto con el ID del nuevo usuario
         return Response(content=message, media_type='application/json', status_code=200)
     except Exception as e:
+        print(e)
         # En caso de error, registra el error y lanza una excepción HTTP
         raise HTTPException(status_code=500, detail="Error al crear usuario")
     
