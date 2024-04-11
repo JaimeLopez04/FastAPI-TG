@@ -24,6 +24,7 @@ docs_build
 site_build
 venv
 constants
+videos
 docs.zip
 archive.zip
 *constants
