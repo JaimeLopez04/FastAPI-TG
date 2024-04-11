@@ -31,6 +31,8 @@ archive.zip
 *~
 .*.sw?
 .cache
+app/constants/
+app/storage/
 
 # macOS
 .DS_Store
