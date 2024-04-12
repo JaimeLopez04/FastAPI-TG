@@ -2,6 +2,7 @@ from fastapi import File, Query, UploadFile, APIRouter, Response, Form
 from datetime import datetime, timedelta
 from sqlalchemy import and_
 from sqlalchemy.sql.expression import insert  # Importa el método insert
+from collections import Counter
 import json
 import os
 
@@ -134,7 +135,9 @@ async def save_video(file, id_user, class_name, class_date):
 
 
 @emotions_recognizer.get('/emotion_recognizer/get_resumen')
-def get_resumen(id_user: int = Query(...)):
+def get_resumen(id_user: str = Query(...)):
+    print(f'Si entra aquí {id_user}')
+    print(type(id_user))
     
     # Obtener la fecha del primer día de la semana (lunes)
     today = datetime.now()
@@ -153,10 +156,38 @@ def get_resumen(id_user: int = Query(...)):
             )
         )
     ).all()
-    
-    message = json.dumps({
-        "emotions_resume" : resumen,
-        "status_code" : 200
-    })
-    
-    return Response(content=message, media_type='application/json', status_code=200)
+
+    # Calcular las sumas de las emociones y el total de faces detectadas
+    sum_emojos = sum(row[4] for row in resumen)
+    sum_disgusto = sum(row[5] for row in resumen)
+    sum_miedo = sum(row[6] for row in resumen)
+    sum_felicidad = sum(row[7] for row in resumen)
+    sum_tristeza = sum(row[8] for row in resumen)
+    sum_sorpresa = sum(row[9] for row in resumen)
+    sum_neutral = sum(row[10] for row in resumen)
+    total_faces_detected = sum(row[11] for row in resumen)
+
+    # Contar cuántas veces aparece cada emoción predominante
+    dominant_emotions_counter = Counter(row[12] for row in resumen)
+
+    # Encontrar la emoción predominante más común
+    dominant_emotion_most_common = dominant_emotions_counter.most_common(1)[0][0]
+
+    # Crear un diccionario con los totales de emociones y faces detectadas
+    emotions_totals = {
+        "enojo": sum_emojos,
+        "disgusto": sum_disgusto,
+        "miedo": sum_miedo,
+        "felicidad": sum_felicidad,
+        "tristeza": sum_tristeza,
+        "sorpresa": sum_sorpresa,
+        "neutral": sum_neutral,
+        "total_faces_detected": total_faces_detected,
+        "most_dominant_emotion": dominant_emotion_most_common
+    }
+
+    # Crear la respuesta JSON
+    response_content = json.dumps({"emotions_totals": emotions_totals, "status_code": 200})
+
+    # Retorna la respuesta con el contenido JSON y el código de estado 200
+    return Response(content=response_content, media_type='application/json', status_code=200)
