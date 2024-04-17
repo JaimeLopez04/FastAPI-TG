@@ -66,6 +66,7 @@ def create_user(user: User):
         # Devuelve un mensaje de éxito junto con el ID del nuevo usuario
         return Response(content=message, media_type='application/json', status_code=200)
     except Exception as e:
+        print(e)
         # En caso de error, registra el error y lanza una excepción HTTP
         raise HTTPException(status_code=500, detail="Error al crear usuario")
     
@@ -94,7 +95,8 @@ def authenticate(user: AuthUser):
     
     if password_from_db == auth_user["password"]:
         message = json.dumps({
-            "message" : f'{names} {last_names}',
+            "name" : f'{names} {last_names}',
+            "id_user" : result[0],
             "status_code" : 200
         })
         return Response(content=message, media_type='application/json', status_code=200)
