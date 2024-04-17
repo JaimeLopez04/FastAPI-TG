@@ -134,6 +134,69 @@ async def save_video(file, id_user, class_name, class_date):
         return None
 
 
+# @emotions_recognizer.get('/emotion_recognizer/get_resumen')
+# def get_resumen(id_user: str = Query(...)):
+#     print(f'Si entra aquí {id_user}')
+#     print(type(id_user))
+    
+#     # Obtener la fecha del primer día de la semana (lunes)
+#     today = datetime.now()
+#     start_of_week = today - timedelta(days=today.weekday())
+
+#     # Obtener la fecha del último día de la semana (domingo)
+#     end_of_week = start_of_week + timedelta(days=6)
+
+#     # Filtrar los registros por la fecha de la clase que esté entre el lunes y el domingo de esta semana
+#     resumen = conn.execute(
+#         class_taught.select().where(
+#             and_(
+#                 class_taught.c.id_user == id_user,
+#                 class_taught.c.class_date >= start_of_week.date(),
+#                 class_taught.c.class_date <= end_of_week.date()
+#             )
+#         )
+#     ).all()
+    
+#     if not resumen:
+#         #No hay datos retorna
+#         response_content = json.dumps({"message": "Aún no tienes datos registrados", "status_code": 200})
+#         return Response(content=response_content, media_type='application/json', status_code=200)
+
+#     # Calcular las sumas de las emociones y el total de faces detectadas
+#     sum_emojos = sum(row[4] for row in resumen)
+#     sum_disgusto = sum(row[5] for row in resumen)
+#     sum_miedo = sum(row[6] for row in resumen)
+#     sum_felicidad = sum(row[7] for row in resumen)
+#     sum_tristeza = sum(row[8] for row in resumen)
+#     sum_sorpresa = sum(row[9] for row in resumen)
+#     sum_neutral = sum(row[10] for row in resumen)
+#     total_faces_detected = sum(row[11] for row in resumen)
+
+#     # Contar cuántas veces aparece cada emoción predominante
+#     dominant_emotions_counter = Counter(row[12] for row in resumen)
+
+#     # Encontrar la emoción predominante más común
+#     dominant_emotion_most_common = dominant_emotions_counter.most_common(1)[0][0]
+
+#     # Crear un diccionario con los totales de emociones y faces detectadas
+#     emotions_totals = {
+#         "enojo": sum_emojos,
+#         "disgusto": sum_disgusto,
+#         "miedo": sum_miedo,
+#         "felicidad": sum_felicidad,
+#         "tristeza": sum_tristeza,
+#         "sorpresa": sum_sorpresa,
+#         "neutral": sum_neutral,
+#         "total_faces_detected": total_faces_detected,
+#         "most_dominant_emotion": dominant_emotion_most_common
+#     }
+
+#     # Crear la respuesta JSON
+#     response_content = json.dumps({"emotions_totals": emotions_totals, "status_code": 200})
+
+#     # Retorna la respuesta con el contenido JSON y el código de estado 200
+#     return Response(content=response_content, media_type='application/json', status_code=200)
+
 @emotions_recognizer.get('/emotion_recognizer/get_resumen')
 def get_resumen(id_user: str = Query(...)):
     print(f'Si entra aquí {id_user}')
@@ -156,16 +219,32 @@ def get_resumen(id_user: str = Query(...)):
             )
         )
     ).all()
+    
+    if not resumen:
+        # No hay datos, retorna un mensaje indicando que no hay datos registrados
+        response_content = json.dumps({"message": "Aún no tienes datos registrados", "status_code": 200})
+        return Response(content=response_content, media_type='application/json', status_code=200)
 
-    # Calcular las sumas de las emociones y el total de faces detectadas
-    sum_emojos = sum(row[4] for row in resumen)
-    sum_disgusto = sum(row[5] for row in resumen)
-    sum_miedo = sum(row[6] for row in resumen)
-    sum_felicidad = sum(row[7] for row in resumen)
-    sum_tristeza = sum(row[8] for row in resumen)
-    sum_sorpresa = sum(row[9] for row in resumen)
-    sum_neutral = sum(row[10] for row in resumen)
-    total_faces_detected = sum(row[11] for row in resumen)
+    # Inicializa las variables de suma de emociones y total de caras detectadas
+    sum_emojos = 0
+    sum_disgusto = 0
+    sum_miedo = 0
+    sum_felicidad = 0
+    sum_tristeza = 0
+    sum_sorpresa = 0
+    sum_neutral = 0
+    total_faces_detected = 0
+
+    # Itera sobre los registros y realiza las sumas
+    for row in resumen:
+        sum_emojos += row[4]
+        sum_disgusto += row[5]
+        sum_miedo += row[6]
+        sum_felicidad += row[7]
+        sum_tristeza += row[8]
+        sum_sorpresa += row[9]
+        sum_neutral += row[10]
+        total_faces_detected += row[11]
 
     # Contar cuántas veces aparece cada emoción predominante
     dominant_emotions_counter = Counter(row[12] for row in resumen)

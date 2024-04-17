@@ -34,6 +34,7 @@ archive.zip
 .cache
 app/constants/
 app/storage/
+database.py
 
 # macOS
 .DS_Store
