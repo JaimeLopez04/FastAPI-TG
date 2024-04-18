@@ -1,15 +1,17 @@
-from fastapi import File, Query, UploadFile, APIRouter, Response, Form
-from datetime import datetime, timedelta
-from sqlalchemy import and_
-from sqlalchemy.sql.expression import insert  # Importa el método insert
-from collections import Counter
 import json
 import os
+import random
+import string
+from collections import Counter, defaultdict
+from datetime import datetime, timedelta
+from fastapi import APIRouter, File, Form, Query, Response, UploadFile
+from sqlalchemy import and_
+from sqlalchemy.sql.expression import insert  # Importa el método insert
 
 #Local libraries
-from app.utils.functions.emotion_recognition import detect_faces_and_emotions
-from app.models.class_taught import class_taught
 from app.config.db import conn
+from app.models.class_taught import class_taught
+from app.utils.functions.emotion_recognition import detect_faces_and_emotions
 
 emotions_recognizer = APIRouter(prefix='/api')
 
@@ -42,7 +44,7 @@ async def analyze_video(file: UploadFile = File(...), id_user: int = Form(...), 
             message = {
                 "emotions_detected": emotions_detected,
                 "status_code": 200,
-                "video_link": f"/download/{video_name}"  # Ruta para descargar el video
+                "video_link": f"http://localhost:8000/{video_path.replace('app/', '')}"
             }
             await save_class(id_user, video_path, class_name, class_date, emotions_detected)
             return Response(content=json.dumps(message), media_type="application/json", status_code=200)
@@ -133,70 +135,6 @@ async def save_video(file, id_user, class_name, class_date):
         print("Error al guardar el video:", e)
         return None
 
-
-# @emotions_recognizer.get('/emotion_recognizer/get_resumen')
-# def get_resumen(id_user: str = Query(...)):
-#     print(f'Si entra aquí {id_user}')
-#     print(type(id_user))
-    
-#     # Obtener la fecha del primer día de la semana (lunes)
-#     today = datetime.now()
-#     start_of_week = today - timedelta(days=today.weekday())
-
-#     # Obtener la fecha del último día de la semana (domingo)
-#     end_of_week = start_of_week + timedelta(days=6)
-
-#     # Filtrar los registros por la fecha de la clase que esté entre el lunes y el domingo de esta semana
-#     resumen = conn.execute(
-#         class_taught.select().where(
-#             and_(
-#                 class_taught.c.id_user == id_user,
-#                 class_taught.c.class_date >= start_of_week.date(),
-#                 class_taught.c.class_date <= end_of_week.date()
-#             )
-#         )
-#     ).all()
-    
-#     if not resumen:
-#         #No hay datos retorna
-#         response_content = json.dumps({"message": "Aún no tienes datos registrados", "status_code": 200})
-#         return Response(content=response_content, media_type='application/json', status_code=200)
-
-#     # Calcular las sumas de las emociones y el total de faces detectadas
-#     sum_emojos = sum(row[4] for row in resumen)
-#     sum_disgusto = sum(row[5] for row in resumen)
-#     sum_miedo = sum(row[6] for row in resumen)
-#     sum_felicidad = sum(row[7] for row in resumen)
-#     sum_tristeza = sum(row[8] for row in resumen)
-#     sum_sorpresa = sum(row[9] for row in resumen)
-#     sum_neutral = sum(row[10] for row in resumen)
-#     total_faces_detected = sum(row[11] for row in resumen)
-
-#     # Contar cuántas veces aparece cada emoción predominante
-#     dominant_emotions_counter = Counter(row[12] for row in resumen)
-
-#     # Encontrar la emoción predominante más común
-#     dominant_emotion_most_common = dominant_emotions_counter.most_common(1)[0][0]
-
-#     # Crear un diccionario con los totales de emociones y faces detectadas
-#     emotions_totals = {
-#         "enojo": sum_emojos,
-#         "disgusto": sum_disgusto,
-#         "miedo": sum_miedo,
-#         "felicidad": sum_felicidad,
-#         "tristeza": sum_tristeza,
-#         "sorpresa": sum_sorpresa,
-#         "neutral": sum_neutral,
-#         "total_faces_detected": total_faces_detected,
-#         "most_dominant_emotion": dominant_emotion_most_common
-#     }
-
-#     # Crear la respuesta JSON
-#     response_content = json.dumps({"emotions_totals": emotions_totals, "status_code": 200})
-
-#     # Retorna la respuesta con el contenido JSON y el código de estado 200
-#     return Response(content=response_content, media_type='application/json', status_code=200)
-
 @emotions_recognizer.get('/emotion_recognizer/get_resumen')
 def get_resumen(id_user: str = Query(...)):
     print(f'Si entra aquí {id_user}')
@@ -267,6 +205,44 @@ def get_resumen(id_user: str = Query(...)):
 
     # Crear la respuesta JSON
     response_content = json.dumps({"emotions_totals": emotions_totals, "status_code": 200})
+
+    # Retorna la respuesta con el contenido JSON y el código de estado 200
+    return Response(content=response_content, media_type='application/json', status_code=200)
+
+
+@emotions_recognizer.get('/emotion_recognizer/get_videos')
+def get_videos(id_user: str = Query(...)):
+    all_data = conn.execute(class_taught.select().where(class_taught.c.id_user == id_user))
+    
+    if not all_data:
+        response_content = json.dumps({"message": "Aún no tienes datos registrados", "status_code": 200})
+        return Response(content=response_content, media_type='application/json', status_code=200)
+    
+    # Filtrar los datos para obtener solo aquellos con un video
+    data_with_videos = [data for data in all_data if data['file_path'] != 'Sin video']
+    
+    # Diccionario para agrupar los datos por class_date y class_name
+    grouped_data = defaultdict(list)
+    
+    for data in data_with_videos:
+        video_url = f"http://localhost:8000/{data['file_path'].replace('app/', '')}"
+        grouped_data[(data['class_date'], data['class_name'])].append({"url": video_url})
+    
+    # Construir el objeto JSON deseado
+    result = []
+    for (class_date, class_name), videos in grouped_data.items():
+        for video in videos:
+            # Generar una clave única de 4 caracteres para cada video
+            video["key"] = ''.join(random.choices(string.ascii_letters + string.digits, k=4))
+        result.append({
+            "date": class_date,
+            "name_class": class_name,
+            "videos": videos,
+            "key": ''.join(random.choices(string.ascii_letters + string.digits, k=4))
+        })
+    
+    # Crear la respuesta JSON
+    response_content = json.dumps({"videos_grouped": result, "status_code": 200})
 
     # Retorna la respuesta con el contenido JSON y el código de estado 200
     return Response(content=response_content, media_type='application/json', status_code=200)
