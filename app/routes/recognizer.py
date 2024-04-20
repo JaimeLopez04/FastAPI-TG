@@ -5,7 +5,7 @@ import string
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from fastapi import APIRouter, File, Form, Query, Response, UploadFile
-from sqlalchemy import and_, select
+from sqlalchemy import and_
 from sqlalchemy.exc import PendingRollbackError
 from sqlalchemy.sql.expression import insert  # Importa el método insert
 
@@ -39,13 +39,16 @@ async def analyze_video(file: UploadFile = File(...), id_user: int = Form(...), 
                     chunk = chunk.encode()
                 buffer.write(chunk)
 
+        #URL del video sin la /app
+        url_sin_app = video_path.split('app\\')[1]
+        
         # Realizar el análisis de emociones en el video
         emotions_detected = detect_faces_and_emotions(video_path)
         if 'dominan_emotion' in emotions_detected and emotions_detected['dominan_emotion'] not in ['Felicidad', 'Sorpresa', 'Neutral']:
             message = {
                 "emotions_detected": emotions_detected,
                 "status_code": 200,
-                "video_link": f"http://localhost:8000/{video_path.replace('app/', '')}"
+                "video_link": f"http://localhost:8000/{url_sin_app}"
             }
             await save_class(id_user, video_path, class_name, class_date, emotions_detected)
             return Response(content=json.dumps(message), media_type="application/json", status_code=200)
@@ -214,15 +217,6 @@ def get_resumen(id_user: str = Query(...)):
 @emotions_recognizer.get('/emotion_recognizer/get_videos')
 def get_videos(id_user: str = Query(...)):
     try:
-    #      resumen = conn.execute(
-    #     class_taught.select().where(
-    #         and_(
-    #             class_taught.c.id_user == id_user,
-    #             class_taught.c.class_date >= start_of_week.date(),
-    #             class_taught.c.class_date <= end_of_week.date()
-    #         )
-    #     )
-    # ).all()
         # Corrección en la construcción de la consulta SQL
         all_data = conn.execute(class_taught.select().where(class_taught.c.id_user == id_user)).all()
 
@@ -266,46 +260,3 @@ def get_videos(id_user: str = Query(...)):
         conn.close()
         return Response(content=json.dumps({"error": "Error de transacción pendiente. Se ha revertido completamente la transacción y cerrado la conexión."}), 
                         media_type='application/json', status_code=500)
-
-# @emotions_recognizer.get('/emotion_recognizer/get_videos')
-# def get_videos(id_user: str = Query(...)):
-#     print('Si entra pero explota')
-#     all_data = conn.execute(class_taught.select().where(class_taught.c.id_user == id_user))
-    
-#     if not all_data:
-#         response_content = json.dumps({"message": "Aún no tienes datos registrados", "status_code": 200})
-#         return Response(content=response_content, media_type='application/json', status_code=200)
-    
-#     # Filtrar los datos para obtener solo aquellos con un video
-#     data_with_videos = [data for data in all_data if data.file_path != 'Sin video']
-#     # data_with_videos = [data for data in all_data if data['file_path'] != 'Sin video']
-    
-#     # Diccionario para agrupar los datos por class_date y class_name
-#     grouped_data = defaultdict(list)
-    
-#     for data in data_with_videos:
-#         video_url = f"http://localhost:8000/{data['file_path'].replace('app/', '')}"
-#         grouped_data[(data['class_date'], data['class_name'])].append({"url": video_url})
-    
-#     # Construir el objeto JSON deseado
-#     result = []
-#     for (class_date, class_name), videos in grouped_data.items():
-#         for video in videos:
-#             # Generar una clave única de 4 caracteres para cada video
-#             video["key"] = ''.join(random.choices(string.ascii_letters + string.digits, k=4))
-#         result.append({
-#             "date": class_date,
-#             "name_class": class_name,
-#             "videos": videos,
-#             "key": ''.join(random.choices(string.ascii_letters + string.digits, k=4))
-#         })
-    
-#     # if not result:
-#     #     response_content = json.dumps({"message" : "No hay emociones negativas registradas en tus clases", "status:code": 200})
-#     #     return Response(content=response_content, media_type='application/json', status_code=200)
-    
-#     # Crear la respuesta JSON
-#     response_content = json.dumps({"videos_grouped": result, "status_code": 200})
-
-#     # Retorna la respuesta con el contenido JSON y el código de estado 200
-#     return Response(content=response_content, media_type='application/json', status_code=200)
