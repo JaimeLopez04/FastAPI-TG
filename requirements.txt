@@ -1,6 +1,12 @@
-fastapi>=0.68.0,<0.69.0
-pydantic>=1.8.0,<2.0.0
-uvicorn>=0.15.0,<0.16.0
-sqlalchemy == 2.0.25
-pymysql == 1.1.0
-cryptography == 42.0.2
+fastapi==0.110.1
+pydantic==2.7.0
+uvicorn==0.29.0
+SQLAlchemy==2.0.29
+PyMySQL==1.1.0
+cryptography==42.0.5
+numpy==1.26.4
+keras==3.2.1
+tensorflow==2.16.1
+tensorflow-intel==2.16.1
+opencv-python==4.9.0.80
+python-multipart==0.0.9

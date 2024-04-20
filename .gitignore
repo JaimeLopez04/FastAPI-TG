@@ -15,6 +15,7 @@ test.db
 log.txt
 Pipfile.lock
 env3.*
+.venv
 env
 .env
 .venv
@@ -22,13 +23,18 @@ entorno
 docs_build
 site_build
 venv
+constants
+videos
 docs.zip
 archive.zip
-
+*constants
 # vim temporary files
 *~
 .*.sw?
 .cache
+app/constants/
+app/storage/
+database.py
 
 # macOS
 .DS_Store
