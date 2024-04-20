@@ -141,9 +141,7 @@ async def save_video(file, id_user, class_name, class_date):
 
 @emotions_recognizer.get('/emotion_recognizer/get_resumen')
 def get_resumen(id_user: str = Query(...)):
-    print(f'Si entra aquí {id_user}')
-    print(type(id_user))
-    
+
     # Obtener la fecha del primer día de la semana (lunes)
     today = datetime.now()
     start_of_week = today - timedelta(days=today.weekday())
@@ -232,7 +230,6 @@ def get_videos(id_user: str = Query(...)):
         
         for data in data_with_videos:
             url_sin_app = data.file_path.split('app\\')[1]
-            print(url_sin_app)
             video_url = f"http://localhost:8000/{url_sin_app}"
             grouped_data[(data.class_date, data.class_name)].append({"url": video_url, "dominant_emotion" : data.dominant_emotion})
         
