@@ -5,7 +5,7 @@
 
 Este repositorio contiene el Código fuente del **API** para el proyecto análisis de sentimientos por visión de computadora en las aulas de clase de la universidad del valle sede Tuluá, este proyecto pretender ser un apoyo para que los docentes puedan tener una mejor metodología de enseñanza mejorando así significativamente la calidad de la enseñanza y el nivel actual de la educación pues mediante esta app logramos ver en qué momentos las clases pasan de ser entretenidas a algo totalmente diferente brindando un punto de inflexión para que el docente pueda cambiar su metodología.
 
-### características claves del **API**
+### Características claves del **API**
 
 - **Autenticación de usuarios**: Esta aplicación permite fácilmente la autenticación de usuarios mediante un correo y una contraseña.
 - **Registro de usuarios**: Para el registro de usuarios se recogen datos básicos como los nombres, los apellidos, el correo y la contraseña.
