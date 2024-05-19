@@ -44,6 +44,7 @@ async def analyze_video(file: UploadFile = File(...), id_user: int = Form(...), 
         
         # Realizar el análisis de emociones en el video
         emotions_detected = detect_faces_and_emotions(video_path)
+        print(emotions_detected)
         if 'dominan_emotion' in emotions_detected and emotions_detected['dominan_emotion'] not in ['Felicidad', 'Sorpresa', 'Neutral']:
             message = {
                 "emotions_detected": emotions_detected,
